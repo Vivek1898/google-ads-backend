@@ -6,6 +6,7 @@ from routes.auth_routes import router as auth_router
 from mongo import get_database_client, get_database
 from middlewares.middlewares import auth_middleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -18,7 +19,16 @@ app = FastAPI()
 
 # MongoDB settings
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
+# app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
+
+# Set CORS policies
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Update this with your frontend URL if needed
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 # app.middleware("http")(auth_middleware)
 
