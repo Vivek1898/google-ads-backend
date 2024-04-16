@@ -67,13 +67,23 @@ async def get_campaigns(request , camp_data):
     client = GoogleAdsClient.load_from_dict(credentials)
     ga_service = client.get_service("GoogleAdsService")
     print(ga_service)
-    query = "SELECT campaign.id, campaign.name FROM campaign"
+    query = "SELECT campaign.id, campaign.name , campaign.status,  campaign.start_date, campaign.end_date, campaign.advertising_channel_type, campaign.resource_name, campaign.network_settings.target_google_search, campaign.network_settings.target_search_network,   campaign.network_settings.target_content_network   FROM campaign"
     response = ga_service.search(customer_id=camp_data['customer_id'] , query=query)
+
     # print(response)
     payload = []
     for row in response:
         # print(f"Campaign with ID {row.campaign.id} and name {row.campaign.name}")
-        payload.append({"id": row.campaign.id, "name": row.campaign.name ,"resource_name": row.campaign.resource_name})
+        payload.append({"id": row.campaign.id, "name": row.campaign.name ,
+                        "resource_name": row.campaign.resource_name ,
+                        "advertising_channel": row.campaign.advertising_channel_type,
+                        "target_google_search": row.campaign.network_settings.target_google_search,
+                        "target_search_network": row.campaign.network_settings.target_search_network,
+                        "target_content_network": row.campaign.network_settings.target_content_network,
+                        "campaign_budget": row.campaign.campaign_budget,
+                        "start_date": row.campaign.start_date,
+                        "end_date": row.campaign.end_date
+                        })
 
     return payload
 
