@@ -1,10 +1,12 @@
 {
-  "builds": [
-    {
-      "src": "main.py",
-      "use": "@vercel/python 3.8"
-    }
-  ],
+  "build": {
+    "src": "main.py",
+    "use": "@vercel/python 3.8",
+    "commands": [
+      "npm run build:client",
+      "npm run build:server"
+    ]
+  },
   "routes": [
     {
       "src": "/(.*)",
