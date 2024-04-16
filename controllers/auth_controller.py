@@ -6,6 +6,7 @@ from google.auth import jwt
 from mongo import get_database_client, get_database
 from dotenv import load_dotenv
 load_dotenv()
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
 
 def generate_token_and_jwt(auth_data: dict):
     try:
@@ -45,7 +46,7 @@ def generate_token_and_jwt(auth_data: dict):
 
         # Store data in MongoDB
         mongo_client = get_database_client()
-        db = get_database(mongo_client, "google_ads_service")
+        db = get_database(mongo_client, MONGO_DB_NAME)
         collection = db["users"]
 
         user_data = {
@@ -98,7 +99,7 @@ def access_token_login (auth_data: dict):
 
         # Store data in MongoDB
         mongo_client = get_database_client()
-        db = get_database(mongo_client, "google_ads_service")
+        db = get_database(mongo_client, MONGO_DB_NAME)
         collection = db["users"]
 
         email = decoded_token.get("email").lower()
@@ -129,7 +130,7 @@ def get_linked_accounts(auth_data: dict):
 
         # Retrieve user from MongoDB
         mongo_client = get_database_client()
-        db = get_database(mongo_client, "google_ads_service")
+        db = get_database(mongo_client, MONGO_DB_NAME)
         collection = db["users"]
         user = collection.find_one({"email": email})
         if not user:

@@ -15,6 +15,8 @@ import sys
 import uuid
 from middlewares.middlewares import decode_token
 import requests
+from dotenv import load_dotenv
+load_dotenv()
 
 # Initialize the Google Ads client
 
@@ -25,6 +27,7 @@ import requests
 # Initialize the Google Ads client
 # client =
 # google_ads_client = GoogleAdsClient.load_from_storage(path=GOOGLE_ADS_CONFIGURATION_FILE)
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
 
 def verify_auth_token(request):
     token = request
@@ -46,7 +49,7 @@ async def get_campaigns(request , camp_data):
         return {"error": "Invalid or missing token"}
     print(user)
     mongo_client = get_database_client()
-    db = get_database(mongo_client, "google_ads_service")
+    db = get_database(mongo_client, MONGO_DB_NAME)
     collection = db["users"]
     user = collection.find_one({"email": user['email']})
     if not user:
@@ -84,7 +87,7 @@ def create_campaigns(request ,camp_data):
         return {"error": "Invalid or missing token"}
     print(user)
     mongo_client = get_database_client()
-    db = get_database(mongo_client, "google_ads_service")
+    db = get_database(mongo_client, MONGO_DB_NAME)
     collection = db["users"]
     user = collection.find_one({"email": user['email']})
     if not user:

@@ -6,6 +6,9 @@ from routes.auth_routes import router as auth_router
 from mongo import get_database_client, get_database
 from middlewares.middlewares import auth_middleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 
 app = FastAPI()
@@ -14,7 +17,7 @@ app = FastAPI()
 
 
 # MongoDB settings
-MONGO_DB_NAME = "google_ads_service"
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 
 # app.middleware("http")(auth_middleware)
