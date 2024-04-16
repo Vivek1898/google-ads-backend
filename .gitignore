@@ -1,3 +1,5 @@
 .env
 google-ads.yaml
 client_secret.json
+myenv
+.idea
