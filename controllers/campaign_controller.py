@@ -176,6 +176,53 @@ def create_campaigns(request ,camp_data):
     except GoogleAdsException as ex:
         handle_googleads_exception(ex)
 
+def get_campaigns_details (request , camp_data):
+    user = verify_auth_token(request)
+    if(user == False):
+        return {"error": "Invalid or missing token"}
+    print(user)
+    mongo_client = get_database_client()
+    db = get_database(mongo_client, MONGO_DB_NAME)
+    collection = db["users"]
+    user = collection.find_one({"email": user['email']})
+    if not user:
+        return {"error": "User not found"}
+    print(user)
+    credentials = {
+        "developer_token": os.getenv("DEVELOPER_TOKEN"),
+        "client_id": user["client_id"],
+        "client_secret": user["client_secret"],
+        "refresh_token": user["refresh_token"],
+        "use_proto_plus": "False",
+        "login_customer_id": camp_data['customer_id'],
+    }
+    print("Credentials: ", credentials)
+    client = GoogleAdsClient.load_from_dict(credentials)
+    campaign_service = client.get_service("CampaignService")
+    ad_group_service = client.get_service("AdGroupService")
+    lis_add_group = ad_group_service.list_ad_groups(customer_id=camp_data['customer_id'])
+
+    customer_id = camp_data.get("customer_id")
+    campaign_id = camp_data.get("campaign_id")
+    query = f"SELECT campaign.id, campaign.name , campaign.status,  campaign.start_date,  FROM campaign WHERE campaign.id = {campaign_id}"
+    response = campaign_service.search_stream(customer_id=customer_id , query=query)
+    payload = []
+    for row in response:
+        # print(f"Campaign with ID {row.campaign.id} and name {row.campaign.name}")
+        payload.append({"id": row.campaign.id, "name": row.campaign.name ,
+                        "resource_name": row.campaign.resource_name ,
+                        "advertising_channel": row.campaign.advertising_channel_type,
+                        "target_google_search": row.campaign.network_settings.target_google_search,
+                        "target_search_network": row.campaign.network_settings.target_search_network,
+                        "target_content_network": row.campaign.network_settings.target_content_network,
+                        "campaign_budget": row.campaign.campaign_budget,
+                        "start_date": row.campaign.start_date,
+                        "end_date": row.campaign.end_date
+                        })
+
+    return payload
+
+
 
 def handle_googleads_exception(exception):
     # print(exception)
