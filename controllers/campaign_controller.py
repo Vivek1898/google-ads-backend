@@ -29,20 +29,49 @@ async def get_campaigns(request, camp_data):
     client = google_ads_client(user, camp_data)
     ga_service = client.get_service("GoogleAdsService")
     print(ga_service)
-    query = "SELECT campaign.id, campaign.name , campaign.status,  campaign.start_date, campaign.end_date, campaign.advertising_channel_type, campaign.resource_name, campaign.network_settings.target_google_search, campaign.network_settings.target_search_network,   campaign.network_settings.target_content_network   FROM campaign"
+    query = (
+        f"SELECT "
+        f"campaign.id, "
+        f"campaign.name, "
+        f"campaign.status, "
+        f"campaign.start_date, "  # Include start date field
+        f"campaign.end_date, "    # Include end date field
+        f"campaign.advertising_channel_type, "
+        f"campaign.resource_name, "
+        f"campaign.network_settings.target_google_search, "
+        f"campaign.network_settings.target_search_network, "
+        f"campaign.network_settings.target_content_network, "
+        f"campaign_budget.amount_micros, "
+        f"campaign.optimization_score, "
+        f"metrics.impressions, "
+        f"metrics.ctr, "
+        f"metrics.cost_micros, "
+        f"metrics.clicks, "
+        f"metrics.average_cpc "
+        f"FROM campaign "
+    )
     response = ga_service.search(customer_id=camp_data['customer_id'], query=query)
     payload = []
     for row in response:
         # print(f"Campaign with ID {row.campaign.id} and name {row.campaign.name}")
-        payload.append({"id": row.campaign.id, "name": row.campaign.name,
-                        "resource_name": row.campaign.resource_name,
-                        "advertising_channel": row.campaign.advertising_channel_type,
-                        "target_google_search": row.campaign.network_settings.target_google_search,
-                        "target_search_network": row.campaign.network_settings.target_search_network,
-                        "target_content_network": row.campaign.network_settings.target_content_network,
-                        "campaign_budget": row.campaign.campaign_budget,
-                        "start_date": row.campaign.start_date,
-                        "end_date": row.campaign.end_date
+        payload.append({
+            "id": row.campaign.id,
+            "name": row.campaign.name,
+            "status": row.campaign.status,
+            "campaign_budget": row.campaign_budget.amount_micros,
+            "optimization_score": row.campaign.optimization_score,
+            "impressions": row.metrics.impressions,
+            "ctr": row.metrics.ctr,
+            "cost_micros": row.metrics.cost_micros,
+            "clicks": row.metrics.clicks,
+            "average_cpc": row.metrics.average_cpc,
+            "start_date": row.campaign.start_date,
+            "end_date": row.campaign.end_date,
+            "advertising_channel": row.campaign.advertising_channel_type,
+            "target_google_search": row.campaign.network_settings.target_google_search,
+            "target_search_network": row.campaign.network_settings.target_search_network,
+            "target_content_network": row.campaign.network_settings.target_content_network,
+            "resource_name": row.campaign.resource_name,
                         })
 
     return payload
@@ -126,36 +155,62 @@ def get_campaigns_details(request, camp_data):
     if (user == False):
         return {"error": "Please login to access this resource"}
     print(user)
-    mongo_client = get_database_client()
-    db = get_database(mongo_client, MONGO_DB_NAME)
-    collection = db["users"]
-    user = collection.find_one({"email": user['email']})
-    if not user:
-        return {"error": "User not found"}
-    print(user)
     client = google_ads_client(user, camp_data)
-    campaign_service = client.get_service("CampaignService")
-    ad_group_service = client.get_service("AdGroupService")
-    lis_add_group = ad_group_service.list_ad_groups(customer_id=camp_data['customer_id'])
+    ga_service = client.get_service("GoogleAdsService")
+    query = (
+        f"SELECT "
+        f"campaign.id, "
+        f"campaign.name, "
+        f"campaign.status, "
+        f"campaign.start_date, "  # Include start date field
+        f"campaign.end_date, "    # Include end date field
+        f"campaign.advertising_channel_type, "
+        f"campaign.resource_name, "
+        f"campaign.network_settings.target_google_search, "
+        f"campaign.network_settings.target_search_network, "
+        f"campaign.network_settings.target_content_network, "
+        f"campaign_budget.amount_micros, "
+        f"campaign.optimization_score, "
+        f"metrics.impressions, "
+        f"metrics.ctr, "
+        f"metrics.cost_micros, "
+        f"metrics.clicks, "
+        f"metrics.average_cpc "
+        f"FROM campaign "
+        f"WHERE campaign.id = {camp_data['campaign_id']}"
+    )
 
-    customer_id = camp_data.get("customer_id")
-    campaign_id = camp_data.get("campaign_id")
-    query = f"SELECT campaign.id, campaign.name , campaign.status,  campaign.start_date,  FROM campaign WHERE campaign.id = {campaign_id}"
-    response = campaign_service.search_stream(customer_id=customer_id, query=query)
-    payload = []
+
+    response = ga_service.search(customer_id=camp_data['customer_id'], query=query)
+
+    result = []
     for row in response:
-        # print(f"Campaign with ID {row.campaign.id} and name {row.campaign.name}")
-        payload.append({"id": row.campaign.id, "name": row.campaign.name,
-                        "resource_name": row.campaign.resource_name,
-                        "advertising_channel": row.campaign.advertising_channel_type,
-                        "target_google_search": row.campaign.network_settings.target_google_search,
-                        "target_search_network": row.campaign.network_settings.target_search_network,
-                        "target_content_network": row.campaign.network_settings.target_content_network,
-                        "campaign_budget": row.campaign.campaign_budget,
-                        "start_date": row.campaign.start_date,
-                        "end_date": row.campaign.end_date
-                        })
+        result.append({
+            "id": row.campaign.id,
+            "name": row.campaign.name,
+            "status": row.campaign.status,
+            "campaign_budget": row.campaign_budget.amount_micros,
+            "optimization_score": row.campaign.optimization_score,
+            "impressions": row.metrics.impressions,
+            "ctr": row.metrics.ctr,
+            "cost_micros": row.metrics.cost_micros,
+            "clicks": row.metrics.clicks,
+            "average_cpc": row.metrics.average_cpc,
+            "start_date": row.campaign.start_date,
+            "end_date": row.campaign.end_date,
+            "advertising_channel": row.campaign.advertising_channel_type,
+            "target_google_search": row.campaign.network_settings.target_google_search,
+            "target_search_network": row.campaign.network_settings.target_search_network,
+            "target_content_network": row.campaign.network_settings.target_content_network,
+            "resource_name": row.campaign.resource_name,
+        })
 
-    return payload
+
+    print(response)
+
+    return {
+            "message": "Campaign details fetched successfully",
+            "campaign_details": result,
+        }
 
 

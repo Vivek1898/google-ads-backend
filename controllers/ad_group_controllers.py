@@ -57,28 +57,49 @@ def create_ad_group (request, camp_data):
 
 def list_ad_groups(request, camp_data):
     try:
-        print("Here to list ad groups for given data2 - ")
-        print(request, camp_data)
         user = verify_auth_token(request)
-        if(user == False):
+        if (user == False):
             return {"error": "Please login to access this resource"}
         print(user)
+        client = get_google_ads_client(user, camp_data)
+        ga_service = client.get_service("GoogleAdsService")
+        query = (
+            f"SELECT "
+            f"ad_group.id, "
+            f"ad_group.name, "
+            f"ad_group.status, "
+            f"metrics.clicks, "
+            f"metrics.cost_micros, "
+            f"metrics.conversions, "
+            f"metrics.average_cpc, "
+            f"metrics.cost_per_conversion "
+            f"FROM ad_group "
+            f"WHERE campaign.id = {camp_data['campaign_id']}"
+        )
 
-        google_ads_client = get_google_ads_client(user, camp_data)
+        response = ga_service.search(customer_id=camp_data['customer_id'], query=query)
 
-        customer_id = str(camp_data["customer_id"])
-        campaign_id = str(camp_data["campaign_id"])
-        ad_group_service = google_ads_client.get_service("AdGroupService")
-        ad_group_query = f"SELECT ad_group.id, ad_group.name FROM ad_group WHERE campaign.id = {campaign_id}"
-        ad_group_response = ad_group_service.search(customer_id=customer_id, query=ad_group_query)
-        print(f"Ad Groups found: {ad_group_response}")
+        result = []
+        for row in response:
+            result.append({
+                "id": row.ad_group.id,
+                "name": row.ad_group.name,
+                "status": row.ad_group.status,
+                "clicks": row.metrics.clicks,
+                "cost_micros": row.metrics.cost_micros,
+                "conversions": row.metrics.conversions,
+                "average_cpc": row.metrics.average_cpc,
+                "cost_per_conversion": row.metrics.cost_per_conversion,
+            })
+
+        print(response)
+
         return {
-            "message": "Ad Groups listed successfully",
-            "data": ad_group_response
+            "message": "Ad  Group list fetched successfully",
+            "campaign_details": result,
         }
     except GoogleAdsException as ex:
-        return handle_google_ads_exception(ex)
+     return handle_google_ads_exception(ex)
     except Exception as err:
         print(f"Caught an exception while creating a  campaign for {camp_data} - {err}")
-        return None
-
+    return None
