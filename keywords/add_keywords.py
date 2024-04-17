@@ -4,7 +4,8 @@ from google.ads.googleads.errors import GoogleAdsException
 
 def add_keywords_in_ad_group(google_ads_client, camp_data):
     try:
-        print(google_ads_client, camp_data)
+        # print(google_ads_client, camp_data)
+        print("================ Create Keywords =====================")
         ad_group_service = google_ads_client.get_service("AdGroupService")
         ad_group_criterion_service = google_ads_client.get_service("AdGroupCriterionService")
         customer_id = str(camp_data["customer_id"])
@@ -49,12 +50,13 @@ def add_keywords_in_ad_group(google_ads_client, camp_data):
             "Created keyword "
             f"{ad_group_criterion_response.results[0].resource_name}."
         )
+        return ad_group_criterion_response.results[0].resource_name
 
 
     except GoogleAdsException as ex:
         handle_google_ads_exception(ex)
     except Exception as err:
-        print(f"Caught an exception while creating a  campaign for {camp_data} - {err}")
+        print(f"Caught an exception while creating a  campaign for keyword {err}")
         return None
 
 

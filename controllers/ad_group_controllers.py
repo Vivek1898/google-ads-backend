@@ -1,26 +1,10 @@
-import os
-from google.ads.googleads.client import GoogleAdsClient
+# Description: Ad Group controllers to create and list ad groups for a campaign
 from google.ads.googleads.errors import GoogleAdsException
-from middlewares.middlewares import decode_token
-from mongo import get_database_client, get_database
+from services.auth_service import verify_auth_token
+from services.client_service import google_ads_client as get_google_ads_client
+from exception.handle_google_ads_exception import handle_google_ads_exception
 
 
-from dotenv import load_dotenv
-load_dotenv()
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
-
-def verify_auth_token(request):
-    token = request
-    print(request)
-    if token:
-        token = token.split("Bearer ")[1] if token.startswith("Bearer ") else token
-        print(token)
-        payload = decode_token(token)
-        print(payload)
-        if payload:
-            # request.state.user = payload
-            return payload
-    return False
 
 
 def create_ad_group (request, camp_data):
@@ -29,25 +13,9 @@ def create_ad_group (request, camp_data):
         print(request, camp_data)
         user = verify_auth_token(request)
         if(user == False):
-            return {"error": "Invalid or missing token"}
+            return {"error": "Please login to access this resource"}
         print(user)
-        mongo_client = get_database_client()
-        db = get_database(mongo_client, MONGO_DB_NAME)
-        collection = db["users"]
-        user = collection.find_one({"email": user['email']})
-        if not user:
-            return {"error": "User not found"}
-        print(user)
-        credentials = {
-            "developer_token": os.getenv("DEVELOPER_TOKEN"),
-            "client_id": user["client_id"],
-            "client_secret": user["client_secret"],
-            "refresh_token": user["refresh_token"],
-            "use_proto_plus": "False",
-            "login_customer_id": camp_data['customer_id'],
-        }
-        print("Credentials: ", credentials)
-        google_ads_client = GoogleAdsClient.load_from_dict(credentials)
+        google_ads_client = get_google_ads_client(user, camp_data)
 
         customer_id = str(camp_data["customer_id"])
         campaign_id = str(camp_data["campaign_id"])
@@ -81,7 +49,7 @@ def create_ad_group (request, camp_data):
             }
         }
     except GoogleAdsException as ex:
-        handle_googleads_exception(ex)
+        return handle_google_ads_exception(ex)
     except Exception as err:
         print(f"Caught an exception while creating a  campaign for {camp_data} - {err}")
         return None
@@ -93,25 +61,10 @@ def list_ad_groups(request, camp_data):
         print(request, camp_data)
         user = verify_auth_token(request)
         if(user == False):
-            return {"error": "Invalid or missing token"}
+            return {"error": "Please login to access this resource"}
         print(user)
-        mongo_client = get_database_client()
-        db = get_database(mongo_client, MONGO_DB_NAME)
-        collection = db["users"]
-        user = collection.find_one({"email": user['email']})
-        if not user:
-            return {"error": "User not found"}
-        print(user)
-        credentials = {
-            "developer_token": os.getenv("DEVELOPER_TOKEN"),
-            "client_id": user["client_id"],
-            "client_secret": user["client_secret"],
-            "refresh_token": user["refresh_token"],
-            "use_proto_plus": "False",
-            "login_customer_id": camp_data['customer_id'],
-        }
-        print("Credentials: ", credentials)
-        google_ads_client = GoogleAdsClient.load_from_dict(credentials)
+
+        google_ads_client = get_google_ads_client(user, camp_data)
 
         customer_id = str(camp_data["customer_id"])
         campaign_id = str(camp_data["campaign_id"])
@@ -124,21 +77,8 @@ def list_ad_groups(request, camp_data):
             "data": ad_group_response
         }
     except GoogleAdsException as ex:
-        handle_googleads_exception(ex)
+        return handle_google_ads_exception(ex)
     except Exception as err:
         print(f"Caught an exception while creating a  campaign for {camp_data} - {err}")
         return None
 
-
-def handle_googleads_exception(exception):
-    # print(exception)
-    print(
-        f'Request with ID "{exception.request_id}" failed with status '
-        f'"{exception.error.code().name}" and includes the following errors:'
-    )
-    for error in exception.failure.errors:
-        print(f'\tError with message "{error.message}".')
-        if error.location:
-            for field_path_element in error.location.field_path_elements:
-                print(f"\t\tOn field: {field_path_element.field_name}")
-    raise exception

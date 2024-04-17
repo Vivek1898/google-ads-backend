@@ -11,7 +11,8 @@ def create_ad_text_asset(google_ads_client, text, pinned_field=None):
 
 def create_advert(google_ads_client, camp_data):
     try:
-        print(google_ads_client, camp_data)
+        # print(google_ads_client, camp_data)
+        print("================ Create Advert =====================")
         customer_id = str(camp_data["customer_id"])
         campaign_id = str(camp_data["campaign_id"])
         ad_group_id = str(camp_data["ad_group_id"])
@@ -28,10 +29,11 @@ def create_advert(google_ads_client, camp_data):
         )
 
         # Set responsive search ad info.
+        camp_data["final_url"] = camp_data["final_url"].strip()
         ad_group_ad.ad.final_urls.append(camp_data["final_url"])
 
         headlines = camp_data["headlines"]
-        headlines = headlines.split(',')
+        # headlines = headlines.split(',')
         isPinnedHeadLine = True
         pinned_headline = None
         headlines_to_be_added = []
@@ -52,7 +54,7 @@ def create_advert(google_ads_client, camp_data):
         ad_group_ad.ad.responsive_search_ad.headlines.extend(headlines_to_be_added)
 
         descriptions = camp_data["descriptions"]
-        descriptions = descriptions.split(',')
+        # descriptions = descriptions.split(',')
         descriptions_to_be_added = []
         for description in descriptions:
             descriptions_to_be_added.append(create_ad_text_asset(google_ads_client, description))
@@ -65,6 +67,8 @@ def create_advert(google_ads_client, camp_data):
         ad_group_ad_response = ad_group_ad_service.mutate_ad_group_ads(
             customer_id=customer_id, operations=[ad_group_ad_operation]
         )
+        print("=================== ad_group_ad_response =====================")
+        print(ad_group_ad_response)
 
         for result in ad_group_ad_response.results:
             print(
@@ -72,11 +76,13 @@ def create_advert(google_ads_client, camp_data):
                 f'"{result.resource_name}".'
             )
 
+        return ad_group_ad_response.results[0].resource_name
 
     except GoogleAdsException as ex:
+        print(ex)
         handle_google_ads_exception(ex)
     except Exception as err:
-        print(f"Caught an exception while creating a  campaign for {camp_data} - {err}")
+        print(f"Caught an exception while creating a  campaign for ad {err}")
         return None
 
 

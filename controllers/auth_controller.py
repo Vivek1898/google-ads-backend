@@ -5,6 +5,9 @@ from google.auth import jwt
 
 from mongo import get_database_client, get_database
 from dotenv import load_dotenv
+from services.auth_service import verify_auth_token
+from services.client_service import google_ads_client as get_google_ads_client
+
 load_dotenv()
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
 
