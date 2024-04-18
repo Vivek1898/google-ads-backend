@@ -1,19 +1,14 @@
 from google.ads.googleads.client import GoogleAdsClient
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-# credentials = {
-#     "developer_token": "6HQT8eShjwwNRQ09ttggzQ",
-#     "refresh_token": "1//0gmjkrF5nIj-GCgYIARAAGBASNwF-L9Ira04XA5QOV1tMUGZhQ00roV73y5gOZ83VSuxCMpRFghWNRA74eCyWpuwNfcjKe3OytCs",
-#     "client_id": "192111549996-b7oh4f6frrkbd1uls0onjhsf75eilko3.apps.googleusercontent.com",
-#     "client_secret": "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",
-#     "use_proto_plus": "True",
-#     "login_customer_id":"2544551178" #? test manager id
-# }
 
 credentials = {
-    "developer_token": "dNgift4mNqKNEl-IIwKA4A",
-    "refresh_token": "1//0gBWWbBEwL6nMCgYIARAAGBASNwF-L9IrGGvRPAOlhQCjvT7IuW452PIgff9MFxOzHNJKtLUVt_78d7hoFv01IIsmf3Ur1W6jaUs",
-    "client_id": "939446384253-4fppn78g2l7lcakcq26qs8kqnr73u4nk.apps.googleusercontent.com",
-    "client_secret": "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",
+    "developer_token": os.getenv("DEVELOPER_TOKEN"),
+    "refresh_token": os.getenv("REFRESH_TOKEN"),
+    "client_id": os.getenv("CLIENT_ID"),
+    "client_secret": os.getenv("CLIENT_SECRET"),
     "use_proto_plus": "True",
     "login_customer_id":"5503786086" #? test manager id
 }
