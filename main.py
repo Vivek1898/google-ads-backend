@@ -5,6 +5,7 @@ from routes.campaign_routes import router as campaign_router
 from routes.auth_routes import router as auth_router
 from routes.ad_group_route import router as ad_group_router
 from routes.budget_route import router as budget_router
+from routes.ad_router import router as ad_router
 from mongo import get_database_client, get_database
 from middlewares.middlewares import auth_middleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -44,4 +45,5 @@ app.include_router(campaign_router, prefix="/api/v1", tags=["campaigns"])
 app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
 app.include_router(ad_group_router, prefix="/api/v1", tags=["adGroup"])
 app.include_router(budget_router, prefix="/api/v1", tags=["budget"])
+app.include_router(ad_router, prefix="/api/v1", tags=["ad"])
 

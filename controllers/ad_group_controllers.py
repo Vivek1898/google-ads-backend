@@ -103,3 +103,103 @@ def list_ad_groups(request, camp_data):
     except Exception as err:
         print(f"Caught an exception while creating a  campaign for {camp_data} - {err}")
     return None
+
+
+def create_keyword (request , keyword_data) :
+    try:
+        print("Here to create an ad for given data - ")
+        print(request, keyword_data)
+
+        user = verify_auth_token(request)
+        if not user:
+            return {"error": "Please login to access this resource"}
+
+        print(user)
+
+        client = get_google_ads_client(user, keyword_data)
+        if not client:
+            return {"error": "Unable to get Google Ads client"}
+
+        customer_id = keyword_data.get("customer_id")
+        ad_group_id = keyword_data.get("ad_group_id")
+        keywords = keyword_data.get("keywords")
+        keywords = keywords.split(',')
+        keyword_operations = []
+
+        for keyword in keywords:
+            print(keyword)
+            ad_group_criterion_operation = client.get_type("AdGroupCriterionOperation")
+            ad_group_criterion = ad_group_criterion_operation.create
+            ad_group_criterion.ad_group = client.get_service("AdGroupService").ad_group_path(
+                customer_id, ad_group_id
+            )
+            ad_group_criterion.status = client.enums.AdGroupCriterionStatusEnum.ENABLED
+            ad_group_criterion.keyword.text = keyword
+            ad_group_criterion.keyword.match_type = (
+                client.enums.KeywordMatchTypeEnum.PHRASE
+            )
+            keyword_operations.append(ad_group_criterion_operation)
+
+        ad_group_criterion_service = client.get_service("AdGroupCriterionService")
+
+        ad_group_criterion_response = ad_group_criterion_service.mutate_ad_group_criteria(
+            customer_id=customer_id, operations=keyword_operations,
+        )
+
+        print(
+            "Created keyword "
+            f"{ad_group_criterion_response.results[0].resource_name}."
+        )
+
+        return {
+            "message": "Keyword created successfully",
+            "data": {
+                "keyword": ad_group_criterion_response.results[0].resource_name
+            }
+        }
+
+
+    except GoogleAdsException as ex:
+        return handle_google_ads_exception(ex)
+
+
+def list_keywords(request, keyword_data):
+    try:
+        print("Here to list all keywords for given customer ID - ")
+        customer_id = keyword_data.get("customer_id")
+        print(request, customer_id)
+
+        # Verify user authentication
+        user = verify_auth_token(request)
+        if not user:
+            return {"error": "Please login to access this resource"}
+
+        print(user)
+
+        # Get Google Ads client
+        client = get_google_ads_client(user, keyword_data)
+        if not client:
+            return {"error": "Unable to get Google Ads client"}
+
+        # Construct a query to retrieve all ad group criteria of type "Keyword"
+        query = f"SELECT  ad_group_criterion.keyword.text, ad_group_criterion.status FROM ad_group_criterion WHERE ad_group_criterion.type = 'KEYWORD'"
+
+        # Issue a search request to retrieve ad group criteria
+        google_ads_service = client.get_service("GoogleAdsService")
+        response = google_ads_service.search(customer_id=customer_id, query=query)
+
+        # Process the response to extract keyword details
+        keywords = []
+        for row in response:
+            keyword_details = {
+                # "id": row.ad_group_criterion.id.value,
+                "text": row.ad_group_criterion.keyword.text,
+                "status": row.ad_group_criterion.status
+            }
+            keywords.append(keyword_details)
+
+        print("List of keywords:", keywords)
+        return keywords
+
+    except GoogleAdsException as ex:
+        handle_google_ads_exception(ex)

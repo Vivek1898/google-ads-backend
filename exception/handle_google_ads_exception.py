@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
 def handle_google_ads_exception(exception):
+    print("Exception occurred: %s" % exception)
     print(
         f'Request with ID "{exception.request_id}" failed with status '
         f'"{exception.error.code().name}" and includes the following errors:'

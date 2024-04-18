@@ -22,59 +22,62 @@ MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
 
 async def get_campaigns(request, camp_data):
     # Implement logic to retrieve campaigns from the Google Ads API
-    user = verify_auth_token(request)
-    if (user == False):
-        return {"error": "Please login to access this resource"}
-    print(user)
-    client = google_ads_client(user, camp_data)
-    ga_service = client.get_service("GoogleAdsService")
-    print(ga_service)
-    query = (
-        f"SELECT "
-        f"campaign.id, "
-        f"campaign.name, "
-        f"campaign.status, "
-        f"campaign.start_date, "  # Include start date field
-        f"campaign.end_date, "    # Include end date field
-        f"campaign.advertising_channel_type, "
-        f"campaign.resource_name, "
-        f"campaign.network_settings.target_google_search, "
-        f"campaign.network_settings.target_search_network, "
-        f"campaign.network_settings.target_content_network, "
-        f"campaign_budget.amount_micros, "
-        f"campaign.optimization_score, "
-        f"metrics.impressions, "
-        f"metrics.ctr, "
-        f"metrics.cost_micros, "
-        f"metrics.clicks, "
-        f"metrics.average_cpc "
-        f"FROM campaign "
-    )
-    response = ga_service.search(customer_id=camp_data['customer_id'], query=query)
-    payload = []
-    for row in response:
-        # print(f"Campaign with ID {row.campaign.id} and name {row.campaign.name}")
-        payload.append({
-            "id": row.campaign.id,
-            "name": row.campaign.name,
-            "status": row.campaign.status,
-            "campaign_budget": row.campaign_budget.amount_micros,
-            "optimization_score": row.campaign.optimization_score,
-            "impressions": row.metrics.impressions,
-            "ctr": row.metrics.ctr,
-            "cost_micros": row.metrics.cost_micros,
-            "clicks": row.metrics.clicks,
-            "average_cpc": row.metrics.average_cpc,
-            "start_date": row.campaign.start_date,
-            "end_date": row.campaign.end_date,
-            "advertising_channel": row.campaign.advertising_channel_type,
-            "target_google_search": row.campaign.network_settings.target_google_search,
-            "target_search_network": row.campaign.network_settings.target_search_network,
-            "target_content_network": row.campaign.network_settings.target_content_network,
-            "resource_name": row.campaign.resource_name,
-                        })
+    try:
+        user = verify_auth_token(request)
+        if (user == False):
+            return {"error": "Please login to access this resource"}
+        print(user)
+        client = google_ads_client(user, camp_data)
+        ga_service = client.get_service("GoogleAdsService")
+        print(ga_service)
+        query = (
+            f"SELECT "
+            f"campaign.id, "
+            f"campaign.name, "
+            f"campaign.status, "
+            f"campaign.start_date, "  # Include start date field
+            f"campaign.end_date, "    # Include end date field
+            f"campaign.advertising_channel_type, "
+            f"campaign.resource_name, "
+            f"campaign.network_settings.target_google_search, "
+            f"campaign.network_settings.target_search_network, "
+            f"campaign.network_settings.target_content_network, "
+            f"campaign_budget.amount_micros, "
+            f"campaign.optimization_score, "
+            f"metrics.impressions, "
+            f"metrics.ctr, "
+            f"metrics.cost_micros, "
+            f"metrics.clicks, "
+            f"metrics.average_cpc "
+            f"FROM campaign "
+        )
+        response = ga_service.search(customer_id=camp_data['customer_id'], query=query)
+        payload = []
+        for row in response:
+            # print(f"Campaign with ID {row.campaign.id} and name {row.campaign.name}")
+            payload.append({
+                "id": row.campaign.id,
+                "name": row.campaign.name,
+                "status": row.campaign.status,
+                "campaign_budget": row.campaign_budget.amount_micros,
+                "optimization_score": row.campaign.optimization_score,
+                "impressions": row.metrics.impressions,
+                "ctr": row.metrics.ctr,
+                "cost_micros": row.metrics.cost_micros,
+                "clicks": row.metrics.clicks,
+                "average_cpc": row.metrics.average_cpc,
+                "start_date": row.campaign.start_date,
+                "end_date": row.campaign.end_date,
+                "advertising_channel": row.campaign.advertising_channel_type,
+                "target_google_search": row.campaign.network_settings.target_google_search,
+                "target_search_network": row.campaign.network_settings.target_search_network,
+                "target_content_network": row.campaign.network_settings.target_content_network,
+                "resource_name": row.campaign.resource_name,
+                            })
 
-    return payload
+        return payload
+    except GoogleAdsException as ex:
+        return handle_google_ads_exception(ex)
 
 
 def create_campaigns(request, camp_data):
